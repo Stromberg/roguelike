@@ -1,8 +1,4 @@
-use crate::{
-    ai::Ai,
-    fighter::Fighter,
-    game::{Game, Item},
-};
+use crate::{ai::Ai, fighter::Fighter, item::Item, messages::Messages};
 use serde::{Deserialize, Serialize};
 use tcod::{colors::WHITE, BackgroundFlag, Color, Console};
 
@@ -69,7 +65,7 @@ impl Object {
         (((x - self.x).pow(2) + (y - self.y).pow(2)) as f32).sqrt()
     }
 
-    pub fn take_damage(&mut self, damage: i32, game: &mut Game) -> Option<i32> {
+    pub fn take_damage(&mut self, damage: i32, messages: &mut Messages) -> Option<i32> {
         // apply damage if possible
         if let Some(fighter) = self.fighter.as_mut() {
             if damage > 0 {
@@ -81,31 +77,31 @@ impl Object {
         if let Some(fighter) = self.fighter {
             if fighter.hp <= 0 {
                 self.alive = false;
-                fighter.on_death.callback(self, game);
+                fighter.on_death.callback(self, messages);
                 return Some(fighter.xp);
             }
         }
         None
     }
 
-    pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
+    pub fn attack(&mut self, target: &mut Object, messages: &mut Messages) {
         // a simple formula for attack damage
         let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
         if damage > 0 {
             // make the target take some damage
-            game.messages.add(
+            messages.add(
                 format!(
                     "{} attacks {} for {} hit points.",
                     self.name, target.name, damage
                 ),
                 WHITE,
             );
-            if let Some(xp) = target.take_damage(damage, game) {
+            if let Some(xp) = target.take_damage(damage, messages) {
                 // yield experience to the player
                 self.fighter.as_mut().unwrap().xp += xp;
             }
         } else {
-            game.messages.add(
+            messages.add(
                 format!(
                     "{} attacks {} but it has no effect!",
                     self.name, target.name

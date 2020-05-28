@@ -1,4 +1,4 @@
-use crate::{game::Game, object::Object};
+use crate::{messages::Messages, object::Object};
 use serde::{Deserialize, Serialize};
 use tcod::colors::{DARK_RED, ORANGE, RED};
 
@@ -20,29 +20,29 @@ pub enum DeathCallback {
 }
 
 impl DeathCallback {
-    pub fn callback(self, object: &mut Object, game: &mut Game) {
+    pub fn callback(self, object: &mut Object, messages: &mut Messages) {
         use DeathCallback::*;
-        let callback: fn(&mut Object, game: &mut Game) = match self {
+        let callback: fn(&mut Object, messages: &mut Messages) = match self {
             Player => player_death,
             Monster => monster_death,
         };
-        callback(object, game);
+        callback(object, messages);
     }
 }
 
-fn player_death(player: &mut Object, game: &mut Game) {
+fn player_death(player: &mut Object, messages: &mut Messages) {
     // the game ended!
-    game.messages.add("You died!", RED);
+    messages.add("You died!", RED);
 
     // for added effect, transform the player into a corpse!
     player.char = '%';
     player.color = DARK_RED;
 }
 
-fn monster_death(monster: &mut Object, game: &mut Game) {
+fn monster_death(monster: &mut Object, messages: &mut Messages) {
     // transform it into a nasty corpse! it doesn't block, can't be
     // attacked and doesn't move
-    game.messages.add(
+    messages.add(
         format!(
             "{} is dead! You gain {} experience points.",
             monster.name,
